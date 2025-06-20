@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet } from "lucide-react";
+import { Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet } from "lucide-react";
 import EmploymentVerification from "@/components/verification/EmploymentVerification";
 import GSTINVerification from "@/components/verification/GSTINVerification";
 import VehicleVerification from "@/components/verification/VehicleVerification";
@@ -106,13 +107,12 @@ const Index = () => {
             <div className="flex items-center space-x-4">
               {/* EKO Logo */}
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
+                <img 
+                  src="/lovable-uploads/cb6255c2-8a31-4856-b9b4-3aaf40ed7f92.png" 
+                  alt="EKO Logo" 
+                  className="h-10 w-auto"
+                />
                 <div className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    EKO
-                  </span>
                   <span className="text-2xl font-bold text-slate-900">Verify Studio</span>
                 </div>
               </div>
