@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Building2, Car, Factory, FileCheck, Download, Upload, Search } from "lucide-react";
+import { Shield, Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet } from "lucide-react";
 import EmploymentVerification from "@/components/verification/EmploymentVerification";
 import GSTINVerification from "@/components/verification/GSTINVerification";
 import VehicleVerification from "@/components/verification/VehicleVerification";
@@ -15,11 +14,15 @@ import EducationVerification from "@/components/verification/EducationVerificati
 import APIKeyInput from "@/components/common/APIKeyInput";
 import BulkUpload from "@/components/common/BulkUpload";
 import ResultsManager from "@/components/common/ResultsManager";
+import Dashboard from "@/components/dashboard/Dashboard";
+import WalletManager from "@/components/wallet/WalletManager";
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("employment");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [apiKey, setApiKey] = useState("");
   const [results, setResults] = useState([]);
+  const [credits, setCredits] = useState(2500); // Initial credits
+  const [transactions, setTransactions] = useState([]);
 
   const verificationCategories = [
     {
@@ -66,8 +69,32 @@ const Index = () => {
     }
   ];
 
+  const deductCredits = (amount: number, description: string) => {
+    if (credits >= amount) {
+      const newCredits = credits - amount;
+      setCredits(newCredits);
+      
+      const transaction = {
+        id: Date.now(),
+        type: 'debit',
+        amount: amount,
+        description: description,
+        timestamp: new Date(),
+        balance: newCredits
+      };
+      
+      setTransactions([transaction, ...transactions]);
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   const addResult = (newResult) => {
-    setResults(prev => [...prev, { ...newResult, id: Date.now(), timestamp: new Date() }]);
+    // Deduct 1 credit per API call
+    if (deductCredits(1, `API Call: ${newResult.service}`)) {
+      setResults(prev => [...prev, { ...newResult, id: Date.now(), timestamp: new Date() }]);
+    }
   };
 
   return (
@@ -76,16 +103,29 @@ const Index = () => {
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Shield className="h-6 w-6 text-white" />
+            <div className="flex items-center space-x-4">
+              {/* EKO Logo */}
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    EKO
+                  </span>
+                  <span className="text-2xl font-bold text-slate-900">Verify Studio</span>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Eko Verify Studio</h1>
-                <p className="text-sm text-slate-600">Complete Verification API Platform</p>
-              </div>
+              <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50">
+                Powered by EKO API
+              </Badge>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Wallet Display */}
+              <div className="flex items-center space-x-2 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
+                <Wallet className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-900">{credits} Credits</span>
+              </div>
               <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
                 API Connected
               </Badge>
@@ -146,11 +186,45 @@ const Index = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Verification Categories Sidebar */}
+          {/* Navigation Sidebar */}
           <div className="lg:col-span-1">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Verification Categories</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Navigation</h3>
               <div className="space-y-3">
+                <button
+                  onClick={() => setActiveTab("dashboard")}
+                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                    activeTab === "dashboard"
+                      ? 'bg-blue-50 border-2 border-blue-200 text-blue-900'
+                      : 'hover:bg-slate-50 border-2 border-transparent text-slate-700'
+                  }`}
+                >
+                  <div className="p-2 rounded-md bg-blue-500">
+                    <BarChart3 className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium">Dashboard</p>
+                    <p className="text-xs opacity-70">Analytics & Overview</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("wallet")}
+                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                    activeTab === "wallet"
+                      ? 'bg-purple-50 border-2 border-purple-200 text-purple-900'
+                      : 'hover:bg-slate-50 border-2 border-transparent text-slate-700'
+                  }`}
+                >
+                  <div className="p-2 rounded-md bg-purple-500">
+                    <Wallet className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium">Wallet</p>
+                    <p className="text-xs opacity-70">Manage Credits</p>
+                  </div>
+                </button>
+
                 {verificationCategories.map((category) => {
                   const IconComponent = category.icon;
                   return (
@@ -177,11 +251,13 @@ const Index = () => {
             </Card>
           </div>
 
-          {/* Main Verification Area */}
+          {/* Main Content Area */}
           <div className="lg:col-span-3">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex items-center justify-between mb-6">
                 <TabsList className="grid w-full max-w-md grid-cols-3 lg:grid-cols-6">
+                  <TabsTrigger value="dashboard" className="text-xs">Dashboard</TabsTrigger>
+                  <TabsTrigger value="wallet" className="text-xs">Wallet</TabsTrigger>
                   <TabsTrigger value="employment" className="text-xs">Employment</TabsTrigger>
                   <TabsTrigger value="gstin" className="text-xs">GSTIN</TabsTrigger>
                   <TabsTrigger value="vehicle" className="text-xs">Vehicle</TabsTrigger>
@@ -191,6 +267,19 @@ const Index = () => {
                 </TabsList>
                 <BulkUpload onResults={addResult} apiKey={apiKey} />
               </div>
+
+              <TabsContent value="dashboard" className="mt-0">
+                <Dashboard results={results} credits={credits} />
+              </TabsContent>
+
+              <TabsContent value="wallet" className="mt-0">
+                <WalletManager 
+                  credits={credits} 
+                  setCredits={setCredits}
+                  transactions={transactions}
+                  setTransactions={setTransactions}
+                />
+              </TabsContent>
 
               <TabsContent value="employment" className="mt-0">
                 <EmploymentVerification apiKey={apiKey} onResult={addResult} />

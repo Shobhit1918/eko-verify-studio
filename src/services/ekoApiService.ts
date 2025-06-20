@@ -10,12 +10,22 @@ interface ApiResponse {
 
 export class EkoApiService {
   private apiKey: string;
+  private onCreditDeduct?: (amount: number, description: string) => boolean;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, onCreditDeduct?: (amount: number, description: string) => boolean) {
     this.apiKey = apiKey;
+    this.onCreditDeduct = onCreditDeduct;
   }
 
   private async makeRequest(endpoint: string, data: any): Promise<ApiResponse> {
+    // Deduct credit before making API call
+    if (this.onCreditDeduct && !this.onCreditDeduct(1, `API Call: ${endpoint}`)) {
+      return {
+        success: false,
+        error: 'Insufficient credits in wallet'
+      };
+    }
+
     try {
       const response = await fetch(`${EKO_BASE_URL}${endpoint}`, {
         method: 'POST',
