@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileCheck } from "lucide-react";
 import { toast } from "sonner";
 import DragDropService from "@/components/common/DragDropService";
+import { EkoApiService } from "@/services/ekoApiService";
 
 interface GSTINVerificationProps {
   apiKey: string;
@@ -66,40 +67,40 @@ const GSTINVerification: React.FC<GSTINVerificationProps> = ({ apiKey, onResult 
     }
 
     setIsLoading(true);
+    const ekoService = new EkoApiService(apiKey);
     
     try {
       const service = verificationServices[0];
       const serviceData = formData[service.id] || {};
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const apiResult = await ekoService.verifyGSTIN(
+        serviceData.gstin_number,
+        serviceData.business_name
+      );
       
-      const mockResult = {
+      const result = {
         service: service.name,
         category: 'GSTIN Verification',
-        status: Math.random() > 0.1 ? 'SUCCESS' : 'FAILED',
+        status: apiResult.success ? 'SUCCESS' : 'FAILED',
         data: serviceData,
-        response: {
-          verified: Math.random() > 0.1,
-          confidence: Math.floor(Math.random() * 15) + 85,
-          details: 'GSTIN verification completed with business details',
-          businessInfo: {
-            legalName: serviceData.business_name || 'Sample Business Name',
-            tradeName: 'Sample Trade Name',
-            registrationDate: '2020-01-15',
-            status: 'Active',
-            natureOfBusiness: 'Manufacturing'
-          }
-        }
+        response: apiResult.data,
+        error: apiResult.error
       };
       
-      onResult(mockResult);
-      toast.success("GSTIN verification completed successfully");
+      onResult(result);
+      
+      if (apiResult.success) {
+        toast.success("GSTIN verification completed successfully");
+      } else {
+        toast.error(`GSTIN verification failed: ${apiResult.error}`);
+      }
+      
       setSelectedServices([]);
       setFormData({});
       
     } catch (error) {
-      toast.error("GSTIN verification failed. Please try again.");
+      console.error('GSTIN verification error:', error);
+      toast.error("GSTIN verification failed. Please check your API key and try again.");
     } finally {
       setIsLoading(false);
     }

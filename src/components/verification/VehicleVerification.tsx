@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Car, IdCard } from "lucide-react";
 import { toast } from "sonner";
 import DragDropService from "@/components/common/DragDropService";
+import { EkoApiService } from "@/services/ekoApiService";
 
 interface VehicleVerificationProps {
   apiKey: string;
@@ -74,48 +75,54 @@ const VehicleVerification: React.FC<VehicleVerificationProps> = ({ apiKey, onRes
     }
 
     setIsLoading(true);
+    const ekoService = new EkoApiService(apiKey);
     
     try {
       for (const serviceId of selectedServices) {
         const service = verificationServices.find(s => s.id === serviceId);
         const serviceData = formData[serviceId] || {};
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        let apiResult;
         
-        const mockResult = {
-          service: service?.name,
-          category: 'Vehicle Verification',
-          status: Math.random() > 0.1 ? 'SUCCESS' : 'FAILED',
-          data: serviceData,
-          response: {
-            verified: Math.random() > 0.1,
-            confidence: Math.floor(Math.random() * 20) + 80,
-            details: `${service?.name} verification completed`,
-            vehicleInfo: serviceId === 'vehicle-rc' ? {
-              make: 'Honda',
-              model: 'City',
-              year: '2022',
-              engineNumber: 'ENG123456',
-              chassisNumber: 'CHS789012'
-            } : {
-              licenceClass: 'LMV',
-              validUpto: '2030-12-31',
-              issueDate: '2020-01-15',
-              issuingAuthority: 'RTO Mumbai'
-            }
+        if (serviceId === 'vehicle-rc') {
+          apiResult = await ekoService.verifyVehicleRC(
+            serviceData.registration_number,
+            serviceData.owner_name
+          );
+        } else if (serviceId === 'driving-licence') {
+          apiResult = await ekoService.verifyDrivingLicence(
+            serviceData.licence_number,
+            serviceData.holder_name,
+            serviceData.date_of_birth
+          );
+        }
+        
+        if (apiResult) {
+          const result = {
+            service: service?.name,
+            category: 'Vehicle Verification',
+            status: apiResult.success ? 'SUCCESS' : 'FAILED',
+            data: serviceData,
+            response: apiResult.data,
+            error: apiResult.error
+          };
+          
+          onResult(result);
+          
+          if (apiResult.success) {
+            toast.success(`${service?.name} verification completed successfully`);
+          } else {
+            toast.error(`${service?.name} verification failed: ${apiResult.error}`);
           }
-        };
-        
-        onResult(mockResult);
+        }
       }
       
-      toast.success(`${selectedServices.length} vehicle verification(s) completed successfully`);
       setSelectedServices([]);
       setFormData({});
       
     } catch (error) {
-      toast.error("Vehicle verification failed. Please try again.");
+      console.error('Vehicle verification error:', error);
+      toast.error("Vehicle verification failed. Please check your API key and try again.");
     } finally {
       setIsLoading(false);
     }

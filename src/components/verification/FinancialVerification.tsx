@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreditCard, Shield, TrendingUp, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import DragDropService from "@/components/common/DragDropService";
+import { EkoApiService } from "@/services/ekoApiService";
 
 interface FinancialVerificationProps {
   apiKey: string;
@@ -90,42 +91,73 @@ const FinancialVerification: React.FC<FinancialVerificationProps> = ({ apiKey, o
     }
 
     setIsLoading(true);
+    const ekoService = new EkoApiService(apiKey);
     
     try {
       for (const serviceId of selectedServices) {
         const service = verificationServices.find(s => s.id === serviceId);
         const serviceData = formData[serviceId] || {};
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1800));
+        let apiResult;
         
-        const mockResult = {
-          service: service?.name,
-          category: 'Financial Verification',
-          status: Math.random() > 0.1 ? 'SUCCESS' : 'FAILED',
-          data: serviceData,
-          response: {
-            verified: Math.random() > 0.1,
-            confidence: Math.floor(Math.random() * 15) + 85,
-            details: `${service?.name} verification completed`,
-            financialInfo: {
-              creditScore: serviceId === 'credit-score' ? Math.floor(Math.random() * 200) + 650 : undefined,
-              riskCategory: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-              monthlyIncome: serviceData.monthly_income || Math.floor(Math.random() * 50000) + 30000,
-              eligibilityAmount: serviceId === 'loan-eligibility' ? Math.floor(Math.random() * 500000) + 100000 : undefined
-            }
+        switch (serviceId) {
+          case 'credit-score':
+            apiResult = await ekoService.getCreditScore(
+              serviceData.pan_number,
+              serviceData.mobile_number
+            );
+            break;
+          case 'bank-statement':
+            apiResult = await ekoService.analyzeBankStatement(
+              serviceData.account_number,
+              serviceData.bank_name,
+              serviceData.statement_period
+            );
+            break;
+          case 'income-verification':
+            apiResult = await ekoService.verifyIncome(
+              serviceData.pan_number,
+              serviceData.employer_name,
+              serviceData.salary_account
+            );
+            break;
+          case 'loan-eligibility':
+            apiResult = await ekoService.checkLoanEligibility(
+              serviceData.pan_number,
+              serviceData.monthly_income,
+              serviceData.loan_amount
+            );
+            break;
+          default:
+            continue;
+        }
+        
+        if (apiResult) {
+          const result = {
+            service: service?.name,
+            category: 'Financial Verification',
+            status: apiResult.success ? 'SUCCESS' : 'FAILED',
+            data: serviceData,
+            response: apiResult.data,
+            error: apiResult.error
+          };
+          
+          onResult(result);
+          
+          if (apiResult.success) {
+            toast.success(`${service?.name} verification completed successfully`);
+          } else {
+            toast.error(`${service?.name} verification failed: ${apiResult.error}`);
           }
-        };
-        
-        onResult(mockResult);
+        }
       }
       
-      toast.success(`${selectedServices.length} financial verification(s) completed successfully`);
       setSelectedServices([]);
       setFormData({});
       
     } catch (error) {
-      toast.error("Financial verification failed. Please try again.");
+      console.error('Financial verification error:', error);
+      toast.error("Financial verification failed. Please check your API key and try again.");
     } finally {
       setIsLoading(false);
     }

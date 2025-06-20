@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Building2, CreditCard, User, Phone, FileText, Users, MapPin, Car, IdCard } from "lucide-react";
 import { toast } from "sonner";
 import DragDropService from "@/components/common/DragDropService";
+import { EkoApiService } from "@/services/ekoApiService";
 
 interface EmploymentVerificationProps {
   apiKey: string;
@@ -131,37 +132,93 @@ const EmploymentVerification: React.FC<EmploymentVerificationProps> = ({ apiKey,
     }
 
     setIsLoading(true);
+    const ekoService = new EkoApiService(apiKey);
     
     try {
-      // Simulate API calls for each service
       for (const serviceId of selectedServices) {
         const service = verificationServices.find(s => s.id === serviceId);
         const serviceData = formData[serviceId] || {};
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        let apiResult;
         
-        const mockResult = {
+        switch (serviceId) {
+          case 'bank-account':
+            apiResult = await ekoService.verifyBankAccount(
+              serviceData.account_number,
+              serviceData.ifsc_code,
+              serviceData.name
+            );
+            break;
+          case 'pan':
+            apiResult = await ekoService.verifyPAN(
+              serviceData.pan_number,
+              serviceData.name
+            );
+            break;
+          case 'aadhaar':
+            apiResult = await ekoService.verifyAadhaar(
+              serviceData.aadhaar_number,
+              serviceData.name
+            );
+            break;
+          case 'mobile-otp':
+            apiResult = await ekoService.sendMobileOTP(serviceData.mobile_number);
+            break;
+          case 'digilocker':
+            apiResult = await ekoService.accessDigilocker(serviceData.digilocker_id);
+            break;
+          case 'voter-id':
+            apiResult = await ekoService.verifyVoterID(
+              serviceData.voter_id,
+              serviceData.name
+            );
+            break;
+          case 'passport':
+            apiResult = await ekoService.verifyPassport(
+              serviceData.passport_number,
+              serviceData.name
+            );
+            break;
+          case 'employee-details':
+            apiResult = await ekoService.verifyEmployeeDetails(
+              serviceData.employee_id,
+              serviceData.company_name
+            );
+            break;
+          case 'name-match':
+            apiResult = await ekoService.nameMatch(
+              serviceData.name1,
+              serviceData.name2
+            );
+            break;
+          default:
+            continue;
+        }
+        
+        const result = {
           service: service?.name,
           category: 'Employment Verification',
-          status: Math.random() > 0.1 ? 'SUCCESS' : 'FAILED',
+          status: apiResult.success ? 'SUCCESS' : 'FAILED',
           data: serviceData,
-          response: {
-            verified: Math.random() > 0.1,
-            confidence: Math.floor(Math.random() * 20) + 80,
-            details: `${service?.name} verification completed`
-          }
+          response: apiResult.data,
+          error: apiResult.error
         };
         
-        onResult(mockResult);
+        onResult(result);
+        
+        if (apiResult.success) {
+          toast.success(`${service?.name} verification completed successfully`);
+        } else {
+          toast.error(`${service?.name} verification failed: ${apiResult.error}`);
+        }
       }
       
-      toast.success(`${selectedServices.length} verification(s) completed successfully`);
       setSelectedServices([]);
       setFormData({});
       
     } catch (error) {
-      toast.error("Verification failed. Please try again.");
+      console.error('Verification error:', error);
+      toast.error("Verification failed. Please check your API key and try again.");
     } finally {
       setIsLoading(false);
     }
