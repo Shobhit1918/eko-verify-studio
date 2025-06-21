@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet } from "lucide-react";
+import { Shield, Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet } from "lucide-react";
 import EmploymentVerification from "@/components/verification/EmploymentVerification";
 import GSTINVerification from "@/components/verification/GSTINVerification";
 import VehicleVerification from "@/components/verification/VehicleVerification";
