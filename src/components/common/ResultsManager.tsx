@@ -113,6 +113,20 @@ const ResultsManager: React.FC<ResultsManagerProps> = ({ results, setResults }) 
     }
   };
 
+  // Helper function to safely convert any value to string
+  const safeToString = (value: any): string => {
+    if (value === null) return 'null';
+    if (value === undefined) return 'undefined';
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return '[Object]';
+      }
+    }
+    return String(value);
+  };
+
   // Helper function to safely get response data
   const getResponseData = (result: Result) => {
     if (result.status === 'FAILED' || !result.response) {
@@ -126,7 +140,7 @@ const ResultsManager: React.FC<ResultsManagerProps> = ({ results, setResults }) 
     return {
       verified: result.response.verified !== undefined ? (result.response.verified ? 'Yes' : 'No') : 'N/A',
       confidence: result.response.confidence !== undefined ? `${result.response.confidence}%` : 'N/A',
-      details: result.response.details || result.response.message || 'No details available'
+      details: safeToString(result.response.details || result.response.message || 'No details available')
     };
   };
 
@@ -289,8 +303,8 @@ const ResultsManager: React.FC<ResultsManagerProps> = ({ results, setResults }) 
                         <div>
                           <p className="text-slate-600 mb-1"><strong>Input Data:</strong></p>
                           <div className="bg-slate-50 p-2 rounded text-xs">
-                            {Object.entries(result.data).map(([key, value]) => (
-                              <div key={key}>{key}: {String(value)}</div>
+                            {Object.entries(result.data || {}).map(([key, value]) => (
+                              <div key={key}>{key}: {safeToString(value)}</div>
                             ))}
                           </div>
                         </div>
