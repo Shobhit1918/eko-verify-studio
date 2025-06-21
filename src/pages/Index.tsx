@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet, ArrowRight } from "lucide-react";
+import { Shield, Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet, ArrowRight, Plus } from "lucide-react";
 import { Link } from 'react-router-dom';
 import EmploymentVerification from "@/components/verification/EmploymentVerification";
 import GSTINVerification from "@/components/verification/GSTINVerification";
@@ -16,7 +15,6 @@ import EducationVerification from "@/components/verification/EducationVerificati
 import APIKeyInput from "@/components/common/APIKeyInput";
 import BulkUpload from "@/components/common/BulkUpload";
 import ResultsManager from "@/components/common/ResultsManager";
-import WalletManager from "@/components/wallet/WalletManager";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("employment");
@@ -115,7 +113,7 @@ const Index = () => {
                   className="h-10 w-auto"
                 />
                 <div className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold text-slate-900">Verify Studio</span>
+                  <span className="text-2xl font-bold text-slate-900">Eko Shield</span>
                 </div>
               </div>
               <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50">
@@ -123,11 +121,22 @@ const Index = () => {
               </Badge>
             </div>
             <div className="flex items-center space-x-4">
-              {/* Wallet Display */}
+              {/* Wallet Display with + button */}
               <div className="flex items-center space-x-2 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
                 <Wallet className="h-4 w-4 text-purple-600" />
                 <span className="text-sm font-medium text-purple-900">{credits} Credits</span>
+                <Link to="/payment">
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-purple-200">
+                    <Plus className="h-3 w-3 text-purple-600" />
+                  </Button>
+                </Link>
               </div>
+              <Link to="/wallet">
+                <Button size="sm" variant="outline">
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Wallet & History
+                </Button>
+              </Link>
               <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
                 API Connected
               </Badge>
@@ -199,23 +208,6 @@ const Index = () => {
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Services</h3>
               <div className="space-y-3">
-                <button
-                  onClick={() => setActiveTab("wallet")}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
-                    activeTab === "wallet"
-                      ? 'bg-purple-50 border-2 border-purple-200 text-purple-900'
-                      : 'hover:bg-slate-50 border-2 border-transparent text-slate-700'
-                  }`}
-                >
-                  <div className="p-2 rounded-md bg-purple-500">
-                    <Wallet className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">Wallet</p>
-                    <p className="text-xs opacity-70">Manage Credits</p>
-                  </div>
-                </button>
-
                 {verificationCategories.map((category) => {
                   const IconComponent = category.icon;
                   return (
@@ -247,7 +239,6 @@ const Index = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex items-center justify-between mb-6">
                 <TabsList className="grid w-full max-w-md grid-cols-3 lg:grid-cols-6">
-                  <TabsTrigger value="wallet" className="text-xs">Wallet</TabsTrigger>
                   <TabsTrigger value="employment" className="text-xs">Employment</TabsTrigger>
                   <TabsTrigger value="gstin" className="text-xs">GSTIN</TabsTrigger>
                   <TabsTrigger value="vehicle" className="text-xs">Vehicle</TabsTrigger>
@@ -257,15 +248,6 @@ const Index = () => {
                 </TabsList>
                 <BulkUpload onResults={addResult} apiKey={apiKey} />
               </div>
-
-              <TabsContent value="wallet" className="mt-0">
-                <WalletManager 
-                  credits={credits} 
-                  setCredits={setCredits}
-                  transactions={transactions}
-                  setTransactions={setTransactions}
-                />
-              </TabsContent>
 
               <TabsContent value="employment" className="mt-0">
                 <EmploymentVerification apiKey={apiKey} onResult={addResult} />
