@@ -1,4 +1,3 @@
-
 const EKO_BASE_URL = 'https://api.eko.in:25002/ekoicici/v3';
 const DEFAULT_API_KEY = '0edddf5605e083638ee94ff26686e967';
 
@@ -33,7 +32,6 @@ export class EkoApiService {
       
       const response = await fetch(`${EKO_BASE_URL}${endpoint}`, {
         method: 'POST',
-        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.apiKey}`,
@@ -45,73 +43,35 @@ export class EkoApiService {
 
       console.log('Response status:', response.status);
       
-      // Handle non-JSON responses or network errors
       let result;
       try {
         result = await response.json();
+        console.log('API response:', result);
       } catch (parseError) {
         console.error('Failed to parse response as JSON:', parseError);
-        
-        // For demo purposes, return mock success data when API is not accessible
         return {
-          success: true,
-          data: {
-            status: 'SUCCESS',
-            message: 'Verification completed (Demo Mode)',
-            verified: true,
-            confidence: 95,
-            details: {
-              ...data,
-              verification_status: 'VERIFIED',
-              timestamp: new Date().toISOString()
-            }
-          }
+          success: false,
+          error: 'Invalid response format from API'
         };
       }
       
       if (!response.ok) {
         console.error('API response not OK:', result);
-        
-        // For demo purposes, return mock success when getting 4xx/5xx errors
         return {
-          success: true,
-          data: {
-            status: 'SUCCESS',
-            message: 'Verification completed (Demo Mode)',
-            verified: true,
-            confidence: 90,
-            details: {
-              ...data,
-              verification_status: 'VERIFIED',
-              timestamp: new Date().toISOString()
-            }
-          }
+          success: false,
+          error: result.message || result.error || `API returned ${response.status}`
         };
       }
 
-      console.log('API response:', result);
       return {
         success: true,
         data: result
       };
     } catch (error) {
       console.error('API call failed:', error);
-      
-      // For demo purposes, return mock success data when network fails
       return {
-        success: true,
-        data: {
-          status: 'SUCCESS',
-          message: 'Verification completed (Demo Mode - Network Error Fallback)',
-          verified: true,
-          confidence: 85,
-          details: {
-            ...data,
-            verification_status: 'VERIFIED',
-            timestamp: new Date().toISOString(),
-            demo_mode: true
-          }
-        }
+        success: false,
+        error: error instanceof Error ? error.message : 'Network error occurred'
       };
     }
   }

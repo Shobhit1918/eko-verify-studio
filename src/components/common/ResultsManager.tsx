@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Download, Search, Filter, Trash2, Eye, FileText, Code } from "lucide-react";
 import { toast } from "sonner";
+import { generatePDF } from "@/utils/pdfGenerator";
 
 interface Result {
   id: number;
@@ -53,34 +53,23 @@ const ResultsManager: React.FC<ResultsManagerProps> = ({ results, setResults }) 
       return;
     }
 
+    const timestamp = new Date().toISOString().split('T')[0];
+
     if (format === 'json') {
       const jsonData = JSON.stringify(resultsToDownload, null, 2);
       const blob = new Blob([jsonData], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `verification_results_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `eko_shield_results_${timestamp}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success(`Downloaded ${resultsToDownload.length} results as JSON`);
     } else {
-      // Simulate PDF generation
-      const pdfContent = resultsToDownload.map(result => 
-        `Service: ${result.service}\nCategory: ${result.category}\nStatus: ${result.status}\nTimestamp: ${result.timestamp.toLocaleString()}\n${'-'.repeat(50)}\n`
-      ).join('\n');
-      
-      const blob = new Blob([pdfContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `verification_results_${new Date().toISOString().split('T')[0]}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success(`Downloaded ${resultsToDownload.length} results as text file`);
+      generatePDF(resultsToDownload, `eko_shield_results_${timestamp}.pdf`);
+      toast.success(`Downloaded ${resultsToDownload.length} results as PDF`);
     }
   };
 
@@ -229,7 +218,7 @@ const ResultsManager: React.FC<ResultsManagerProps> = ({ results, setResults }) 
             disabled={filteredResults.length === 0}
           >
             <FileText className="h-4 w-4 mr-2" />
-            Download Report
+            Download PDF
           </Button>
 
           {selectedResults.length > 0 && (
