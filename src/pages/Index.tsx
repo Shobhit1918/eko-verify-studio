@@ -5,7 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet } from "lucide-react";
+import { Shield, Building2, Car, Factory, FileCheck, Download, Upload, Search, BarChart3, Wallet, ArrowRight } from "lucide-react";
+import { Link } from 'react-router-dom';
 import EmploymentVerification from "@/components/verification/EmploymentVerification";
 import GSTINVerification from "@/components/verification/GSTINVerification";
 import VehicleVerification from "@/components/verification/VehicleVerification";
@@ -15,11 +16,10 @@ import EducationVerification from "@/components/verification/EducationVerificati
 import APIKeyInput from "@/components/common/APIKeyInput";
 import BulkUpload from "@/components/common/BulkUpload";
 import ResultsManager from "@/components/common/ResultsManager";
-import Dashboard from "@/components/dashboard/Dashboard";
 import WalletManager from "@/components/wallet/WalletManager";
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("employment");
   const [apiKey, setApiKey] = useState("");
   const [results, setResults] = useState([]);
   const [credits, setCredits] = useState(2500); // Initial credits
@@ -98,6 +98,8 @@ const Index = () => {
     }
   };
 
+  const successRate = results.length > 0 ? (results.filter(r => r.status === 'SUCCESS').length / results.length * 100).toFixed(1) : 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
@@ -129,6 +131,12 @@ const Index = () => {
               <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
                 API Connected
               </Badge>
+              <Link to="/dashboard">
+                <Button size="sm" variant="outline">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Full Dashboard
+                </Button>
+              </Link>
               <Button size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
                 Export All
@@ -144,7 +152,7 @@ const Index = () => {
           <APIKeyInput apiKey={apiKey} setApiKey={setApiKey} />
         </div>
 
-        {/* Stats Overview */}
+        {/* Quick Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="p-6 bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
             <div className="flex items-center justify-between">
@@ -159,7 +167,7 @@ const Index = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-600 text-sm font-medium">Success Rate</p>
-                <p className="text-2xl font-bold text-green-900">98.5%</p>
+                <p className="text-2xl font-bold text-green-900">{successRate}%</p>
               </div>
               <FileCheck className="h-8 w-8 text-green-500" />
             </div>
@@ -173,14 +181,14 @@ const Index = () => {
               <Shield className="h-8 w-8 text-purple-500" />
             </div>
           </Card>
-          <Card className="p-6 bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
-            <div className="flex items-center justify-between">
+          <Card className="p-6 bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200">
+            <Link to="/dashboard" className="flex items-center justify-between h-full group">
               <div>
-                <p className="text-orange-600 text-sm font-medium">Avg Response</p>
-                <p className="text-2xl font-bold text-orange-900">1.2s</p>
+                <p className="text-slate-600 text-sm font-medium">View Analytics</p>
+                <p className="text-lg font-bold text-slate-900">Full Dashboard</p>
               </div>
-              <Upload className="h-8 w-8 text-orange-500" />
-            </div>
+              <ArrowRight className="h-6 w-6 text-slate-500 group-hover:text-slate-700 transition-colors" />
+            </Link>
           </Card>
         </div>
 
@@ -189,25 +197,8 @@ const Index = () => {
           {/* Navigation Sidebar */}
           <div className="lg:col-span-1">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Navigation</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Services</h3>
               <div className="space-y-3">
-                <button
-                  onClick={() => setActiveTab("dashboard")}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
-                    activeTab === "dashboard"
-                      ? 'bg-blue-50 border-2 border-blue-200 text-blue-900'
-                      : 'hover:bg-slate-50 border-2 border-transparent text-slate-700'
-                  }`}
-                >
-                  <div className="p-2 rounded-md bg-blue-500">
-                    <BarChart3 className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">Dashboard</p>
-                    <p className="text-xs opacity-70">Analytics & Overview</p>
-                  </div>
-                </button>
-
                 <button
                   onClick={() => setActiveTab("wallet")}
                   className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
@@ -256,7 +247,6 @@ const Index = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex items-center justify-between mb-6">
                 <TabsList className="grid w-full max-w-md grid-cols-3 lg:grid-cols-6">
-                  <TabsTrigger value="dashboard" className="text-xs">Dashboard</TabsTrigger>
                   <TabsTrigger value="wallet" className="text-xs">Wallet</TabsTrigger>
                   <TabsTrigger value="employment" className="text-xs">Employment</TabsTrigger>
                   <TabsTrigger value="gstin" className="text-xs">GSTIN</TabsTrigger>
@@ -267,10 +257,6 @@ const Index = () => {
                 </TabsList>
                 <BulkUpload onResults={addResult} apiKey={apiKey} />
               </div>
-
-              <TabsContent value="dashboard" className="mt-0">
-                <Dashboard results={results} credits={credits} />
-              </TabsContent>
 
               <TabsContent value="wallet" className="mt-0">
                 <WalletManager 
