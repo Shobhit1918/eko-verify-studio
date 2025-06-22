@@ -200,14 +200,7 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
       bgColor = [254, 242, 242]; // Light red
     }
 
-    // Main container shadow effect
-    doc.setFillColor(0, 0, 0);
-    doc.setDrawColor(0, 0, 0);
-    doc.setGlobalAlpha(0.1);
-    doc.roundedRect(17, yPosition + 2, pageWidth - 34, boxHeight, 3, 3, 'F');
-    doc.setGlobalAlpha(1);
-
-    // Main container background
+    // Main container background (removed shadow effect)
     doc.setFillColor(...bgColor);
     doc.roundedRect(15, yPosition, pageWidth - 30, boxHeight, 3, 3, 'F');
 
