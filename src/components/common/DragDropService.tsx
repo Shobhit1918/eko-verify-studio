@@ -26,6 +26,31 @@ const DragDropService: React.FC<DragDropServiceProps> = ({ service, onDrop, isSe
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', service.id);
     e.dataTransfer.effectAllowed = 'copy';
+    
+    // Add visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    // Reset visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const draggedServiceId = e.dataTransfer.getData('text/plain');
+    if (draggedServiceId === service.id && !isSelected) {
+      onDrop(service.id);
+    }
   };
 
   const handleClick = () => {
@@ -43,6 +68,9 @@ const DragDropService: React.FC<DragDropServiceProps> = ({ service, onDrop, isSe
       }`}
       draggable={!isSelected}
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
       onClick={handleClick}
     >
       <div className="flex items-start justify-between mb-3">
@@ -64,7 +92,7 @@ const DragDropService: React.FC<DragDropServiceProps> = ({ service, onDrop, isSe
           ) : (
             <>
               <Move className="h-4 w-4 text-slate-400" />
-              <Button size="sm" variant="outline" className="h-6 w-6 p-0">
+              <Button size="sm" variant="outline" className="h-6 w-6 p-0" onClick={handleClick}>
                 <Plus className="h-3 w-3" />
               </Button>
             </>
