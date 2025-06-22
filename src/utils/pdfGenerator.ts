@@ -202,9 +202,10 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
 
     // Main container shadow effect
     doc.setFillColor(0, 0, 0);
-    doc.setGState(new doc.GState({opacity: 0.1}));
+    doc.setDrawColor(0, 0, 0);
+    doc.setGlobalAlpha(0.1);
     doc.roundedRect(17, yPosition + 2, pageWidth - 34, boxHeight, 3, 3, 'F');
-    doc.setGState(new doc.GState({opacity: 1}));
+    doc.setGlobalAlpha(1);
 
     // Main container background
     doc.setFillColor(...bgColor);
