@@ -17,7 +17,7 @@ interface EducationVerificationProps {
 
 const EducationVerification: React.FC<EducationVerificationProps> = ({ apiKey, onResult }) => {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const verificationServices = [
@@ -48,15 +48,14 @@ const EducationVerification: React.FC<EducationVerificationProps> = ({ apiKey, o
   ];
 
   // Create a mapping of common field names
-  const fieldMappings = {
-    'student_name': ['student_name', 'certificate_holder', 'license_holder'],
+  const fieldMappings: Record<string, string[]> = {
+    'holder_name': ['student_name', 'certificate_holder', 'license_holder'],
     'institution_name': ['university_name', 'certifying_body', 'regulatory_body']
   };
 
   // Get unique fields from selected services with deduplication
   const uniqueFields = useMemo(() => {
-    const allFields = new Set<string>();
-    const fieldSourceMap = new Map<string, string[]>();
+    const fieldsMap = new Map<string, { originalFields: string[], label: string }>();
 
     selectedServices.forEach(serviceId => {
       const service = verificationServices.find(s => s.id === serviceId);
@@ -71,19 +70,25 @@ const EducationVerification: React.FC<EducationVerificationProps> = ({ apiKey, o
             }
           }
 
-          if (!fieldSourceMap.has(commonFieldName)) {
-            fieldSourceMap.set(commonFieldName, []);
+          if (!fieldsMap.has(commonFieldName)) {
+            fieldsMap.set(commonFieldName, {
+              originalFields: [],
+              label: commonFieldName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+            });
           }
-          fieldSourceMap.get(commonFieldName)?.push(field);
-          allFields.add(commonFieldName);
+          
+          const fieldInfo = fieldsMap.get(commonFieldName)!;
+          if (!fieldInfo.originalFields.includes(field)) {
+            fieldInfo.originalFields.push(field);
+          }
         });
       }
     });
 
-    return Array.from(allFields).map(field => ({
-      name: field,
-      originalFields: fieldSourceMap.get(field) || [field],
-      label: field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+    return Array.from(fieldsMap.entries()).map(([name, info]) => ({
+      name,
+      originalFields: info.originalFields,
+      label: info.label
     }));
   }, [selectedServices]);
 
@@ -143,7 +148,7 @@ const EducationVerification: React.FC<EducationVerificationProps> = ({ apiKey, o
         if (!service) continue;
 
         // Map common fields back to service-specific field names
-        const serviceData = {};
+        const serviceData: Record<string, string> = {};
         service.fields.forEach(field => {
           // Check if this field has a common mapping
           let valueField = field;
@@ -161,25 +166,25 @@ const EducationVerification: React.FC<EducationVerificationProps> = ({ apiKey, o
         switch (serviceId) {
           case 'degree-verification':
             apiResult = await ekoService.verifyDegree(
-              serviceData.degree_number,
-              serviceData.university_name,
-              serviceData.student_name,
-              serviceData.graduation_year
+              serviceData['degree_number'],
+              serviceData['university_name'],
+              serviceData['student_name'],
+              serviceData['graduation_year']
             );
             break;
           case 'professional-certification':
             apiResult = await ekoService.verifyProfessionalCertification(
-              serviceData.certificate_number,
-              serviceData.certifying_body,
-              serviceData.certificate_holder
+              serviceData['certificate_number'],
+              serviceData['certifying_body'],
+              serviceData['certificate_holder']
             );
             break;
           case 'regulatory-compliance':
             apiResult = await ekoService.checkRegulatoryCompliance(
-              serviceData.license_number,
-              serviceData.regulatory_body,
-              serviceData.license_holder,
-              serviceData.license_type
+              serviceData['license_number'],
+              serviceData['regulatory_body'],
+              serviceData['license_holder'],
+              serviceData['license_type']
             );
             break;
           default:
