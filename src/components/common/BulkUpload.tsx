@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,12 +24,12 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ onResults, apiKey }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const verificationServices = [
-    { id: 'bank-account', name: 'Bank Account Verification', category: 'Employment' },
-    { id: 'pan', name: 'PAN Verification', category: 'Employment' },
-    { id: 'aadhaar', name: 'Aadhaar Verification', category: 'Employment' },
-    { id: 'gstin', name: 'GSTIN Verification', category: 'GSTIN' },
-    { id: 'vehicle-rc', name: 'Vehicle RC Verification', category: 'Vehicle' },
-    { id: 'driving-licence', name: 'Driving Licence Verification', category: 'Vehicle' },
+    { id: 'bank-account', name: 'Bank Account Verification', category: 'Employment', template: 'account_number,ifsc_code,holder_name\n12345678901,SBIN0001234,John Doe\n' },
+    { id: 'pan', name: 'PAN Verification', category: 'Employment', template: 'pan_number,holder_name\nABCDE1234F,John Doe\n' },
+    { id: 'aadhaar', name: 'Aadhaar Verification', category: 'Employment', template: 'aadhaar_number,holder_name\n123456789012,John Doe\n' },
+    { id: 'gstin', name: 'GSTIN Verification', category: 'GSTIN', template: 'gstin_number,business_name\n22AAAAA0000A1Z5,Sample Business\n' },
+    { id: 'vehicle-rc', name: 'Vehicle RC Verification', category: 'Vehicle', template: 'registration_number,owner_name\nMH01AB1234,John Doe\n' },
+    { id: 'driving-licence', name: 'Driving Licence Verification', category: 'Vehicle', template: 'licence_number,holder_name,date_of_birth\nMH0120200012345,John Doe,1990-01-01\n' },
   ];
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,30 +51,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({ onResults, apiKey }) => {
     }
 
     const service = verificationServices.find(s => s.id === selectedService);
-    let csvContent = '';
-    
-    switch (selectedService) {
-      case 'bank-account':
-        csvContent = 'account_number,ifsc_code,name\n12345678901,SBIN0001234,John Doe\n';
-        break;
-      case 'pan':
-        csvContent = 'pan_number,name\nABCDE1234F,John Doe\n';
-        break;
-      case 'aadhaar':
-        csvContent = 'aadhaar_number,name\n123456789012,John Doe\n';
-        break;
-      case 'gstin':
-        csvContent = 'gstin_number,business_name\n22AAAAA0000A1Z5,Sample Business\n';
-        break;
-      case 'vehicle-rc':
-        csvContent = 'registration_number,owner_name\nMH01AB1234,John Doe\n';
-        break;
-      case 'driving-licence':
-        csvContent = 'licence_number,holder_name,date_of_birth\nMH0120200012345,John Doe,1990-01-01\n';
-        break;
-      default:
-        csvContent = 'field1,field2,field3\nvalue1,value2,value3\n';
-    }
+    const csvContent = service?.template || 'field1,field2,field3\nvalue1,value2,value3\n';
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
