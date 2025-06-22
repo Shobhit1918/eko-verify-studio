@@ -20,58 +20,34 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
 
   // Function to add logos to current page
   const addLogosToPage = () => {
-    // Add Eko Shield logo (top right)
-    const ekoShieldImg = new Image();
-    ekoShieldImg.src = '/lovable-uploads/83f86585-72e8-411c-bb53-da63b38bee94.png';
+    // Add Eko Shield logo (top right) - using the uploaded image
+    try {
+      doc.addImage('/lovable-uploads/893ef05b-89c4-448a-b78b-1c610401b13b.png', 'PNG', pageWidth - 50, 10, 35, 35);
+    } catch (error) {
+      console.log('Could not load Eko Shield logo, using placeholder');
+      // Fallback placeholder
+      doc.setFillColor(37, 99, 235);
+      doc.roundedRect(pageWidth - 50, 10, 35, 35, 5, 5, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EKO', pageWidth - 42, 22);
+      doc.text('SHIELD', pageWidth - 46, 32);
+    }
     
-    // Add Eko logo (top left)
-    const ekoImg = new Image();
-    ekoImg.src = '/lovable-uploads/874d48d7-a437-4d40-abd9-fc191650c367.png';
-    
-    // Convert images to base64 and add to PDF
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Add Eko Shield logo (top right)
-    canvas.width = 40;
-    canvas.height = 40;
-    
-    ekoShieldImg.onload = () => {
-      if (ctx) {
-        ctx.clearRect(0, 0, 40, 40);
-        ctx.drawImage(ekoShieldImg, 0, 0, 40, 40);
-        const ekoShieldDataUrl = canvas.toDataURL('image/png');
-        doc.addImage(ekoShieldDataUrl, 'PNG', pageWidth - 50, 10, 35, 35);
-      }
-    };
-
-    // Add Eko logo (top left)
-    ekoImg.onload = () => {
-      if (ctx) {
-        ctx.clearRect(0, 0, 40, 40);
-        ctx.drawImage(ekoImg, 0, 0, 40, 40);
-        const ekoDataUrl = canvas.toDataURL('image/png');
-        doc.addImage(ekoDataUrl, 'PNG', 15, 10, 35, 35);
-      }
-    };
-
-    // Add logo placeholders for immediate use
-    // Eko Shield placeholder (top right)
-    doc.setFillColor(37, 99, 235);
-    doc.roundedRect(pageWidth - 50, 10, 35, 35, 5, 5, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(6);
-    doc.setFont('helvetica', 'bold');
-    doc.text('EKO', pageWidth - 42, 22);
-    doc.text('SHIELD', pageWidth - 46, 32);
-
-    // Eko placeholder (top left)
-    doc.setFillColor(245, 158, 11);
-    doc.roundedRect(15, 10, 35, 35, 5, 5, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.text('eko', 25, 30);
+    // Add Eko logo (top left) - using the uploaded image
+    try {
+      doc.addImage('/lovable-uploads/4fb9de62-62d5-46b1-ac3a-abfb7b287eaa.png', 'PNG', 15, 10, 35, 35);
+    } catch (error) {
+      console.log('Could not load Eko logo, using placeholder');
+      // Fallback placeholder
+      doc.setFillColor(245, 158, 11);
+      doc.roundedRect(15, 10, 35, 35, 5, 5, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text('eko', 25, 30);
+    }
 
     // Reset text color
     doc.setTextColor(0, 0, 0);
