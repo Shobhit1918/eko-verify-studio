@@ -16,53 +16,84 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
-  let yPosition = 30;
+  let yPosition = 70; // Increased top margin for logos
 
-  // Add Eko Shield logo (top right)
-  const logoImg = new Image();
-  logoImg.src = '/lovable-uploads/cb6255c2-8a31-4856-b9b4-3aaf40ed7f92.png';
-  
-  // Convert image to base64 and add to PDF
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = 50;
-  canvas.height = 50;
-  
-  logoImg.onload = () => {
-    if (ctx) {
-      ctx.drawImage(logoImg, 0, 0, 50, 50);
-      const logoDataUrl = canvas.toDataURL('image/png');
-      doc.addImage(logoDataUrl, 'PNG', pageWidth - 60, 10, 40, 40);
-    }
+  // Function to add logos to current page
+  const addLogosToPage = () => {
+    // Add Eko Shield logo (top right)
+    const ekoShieldImg = new Image();
+    ekoShieldImg.src = '/lovable-uploads/83f86585-72e8-411c-bb53-da63b38bee94.png';
+    
+    // Add Eko logo (top left)
+    const ekoImg = new Image();
+    ekoImg.src = '/lovable-uploads/874d48d7-a437-4d40-abd9-fc191650c367.png';
+    
+    // Convert images to base64 and add to PDF
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Add Eko Shield logo (top right)
+    canvas.width = 40;
+    canvas.height = 40;
+    
+    ekoShieldImg.onload = () => {
+      if (ctx) {
+        ctx.clearRect(0, 0, 40, 40);
+        ctx.drawImage(ekoShieldImg, 0, 0, 40, 40);
+        const ekoShieldDataUrl = canvas.toDataURL('image/png');
+        doc.addImage(ekoShieldDataUrl, 'PNG', pageWidth - 50, 10, 35, 35);
+      }
+    };
+
+    // Add Eko logo (top left)
+    ekoImg.onload = () => {
+      if (ctx) {
+        ctx.clearRect(0, 0, 40, 40);
+        ctx.drawImage(ekoImg, 0, 0, 40, 40);
+        const ekoDataUrl = canvas.toDataURL('image/png');
+        doc.addImage(ekoDataUrl, 'PNG', 15, 10, 35, 35);
+      }
+    };
+
+    // Add logo placeholders for immediate use
+    // Eko Shield placeholder (top right)
+    doc.setFillColor(37, 99, 235);
+    doc.roundedRect(pageWidth - 50, 10, 35, 35, 5, 5, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EKO', pageWidth - 42, 22);
+    doc.text('SHIELD', pageWidth - 46, 32);
+
+    // Eko placeholder (top left)
+    doc.setFillColor(245, 158, 11);
+    doc.roundedRect(15, 10, 35, 35, 5, 5, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('eko', 25, 30);
+
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
   };
 
-  // Add logo placeholder for immediate use
-  doc.setFillColor(245, 158, 11); // Gold color matching the logo
-  doc.roundedRect(pageWidth - 60, 10, 40, 40, 5, 5, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('EKO', pageWidth - 52, 25);
-  doc.text('SHIELD', pageWidth - 55, 35);
-
-  // Reset text color
-  doc.setTextColor(0, 0, 0);
+  // Add logos to first page
+  addLogosToPage();
 
   // Header with professional styling
-  doc.setFillColor(37, 99, 235); // Blue header background
-  doc.rect(0, 0, pageWidth, 25, 'F');
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 50, pageWidth, 20, 'F'); // Moved down to avoid logo overlap
   
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('EKO SHIELD - VERIFICATION REPORT', 20, 16);
+  doc.text('EKO SHIELD - VERIFICATION REPORT', pageWidth / 2, 62, { align: 'center' });
 
   // Reset text color for body
   doc.setTextColor(0, 0, 0);
-  yPosition = 35;
 
-  // Report metadata section
-  doc.setFillColor(248, 250, 252); // Light gray background
+  // Report metadata section with proper spacing
+  doc.setFillColor(248, 250, 252);
   doc.rect(15, yPosition, pageWidth - 30, 25, 'F');
   doc.setDrawColor(226, 232, 240);
   doc.rect(15, yPosition, pageWidth - 30, 25);
@@ -83,7 +114,7 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
 
   yPosition += 35;
 
-  // Add charts section
+  // Add charts section with proper spacing
   if (results.length > 0) {
     // Chart 1: Success vs Failure pie chart
     const chartY = yPosition;
@@ -134,12 +165,10 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
       const barX = pageWidth - 90;
       const barY = chartY + 15;
       const barWidth = 60;
-      const maxBarHeight = 40;
       
       categories.forEach((category, index) => {
         const count = results.filter(r => r.category === category).length;
-        const barHeight = (count / results.length) * maxBarHeight;
-        const currentBarY = barY + (index * 8);
+        const currentBarY = barY + (index * 10); // Increased spacing
         
         // Bar background
         doc.setFillColor(226, 232, 240);
@@ -164,7 +193,7 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
       });
     }
 
-    yPosition += 70;
+    yPosition += 80; // Increased spacing
   }
 
   // Add separator line
@@ -177,30 +206,31 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text('Detailed Verification Results', 20, yPosition);
-  yPosition += 15;
+  yPosition += 20; // Increased spacing
 
-  // Individual results with enhanced formatting
+  // Individual results with enhanced formatting and proper spacing
   results.forEach((result, index) => {
-    // Check if we need a new page
-    if (yPosition > pageHeight - 100) {
+    // Check if we need a new page - increased threshold
+    if (yPosition > pageHeight - 120) {
       doc.addPage();
-      yPosition = 30;
+      addLogosToPage(); // Add logos to new page
+      yPosition = 70; // Reset position with logo space
     }
 
     // Result container with enhanced styling
-    const boxHeight = 70;
+    const boxHeight = 75; // Slightly increased height
     let headerColor: [number, number, number];
     let bgColor: [number, number, number];
     
     if (result.status === 'SUCCESS') {
-      headerColor = [34, 197, 94]; // Green
-      bgColor = [240, 253, 244]; // Light green
+      headerColor = [34, 197, 94];
+      bgColor = [240, 253, 244];
     } else {
-      headerColor = [239, 68, 68]; // Red
-      bgColor = [254, 242, 242]; // Light red
+      headerColor = [239, 68, 68];
+      bgColor = [254, 242, 242];
     }
 
-    // Main container background (removed shadow effect)
+    // Main container background
     doc.setFillColor(...bgColor);
     doc.roundedRect(15, yPosition, pageWidth - 30, boxHeight, 3, 3, 'F');
 
@@ -226,7 +256,7 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
     doc.setTextColor(0, 0, 0);
     yPosition += 20;
 
-    // Content in two columns
+    // Content in two columns with better spacing
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     
@@ -234,26 +264,28 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
     doc.setFont('helvetica', 'bold');
     doc.text('Input Parameters:', 20, yPosition);
     doc.setFont('helvetica', 'normal');
-    yPosition += 6;
+    yPosition += 8; // Increased spacing
     
+    let leftColumnLines = 0;
     if (result.data && Object.keys(result.data).length > 0) {
       Object.entries(result.data).forEach(([key, value], idx) => {
-        if (idx < 3) { // Limit to prevent overflow
-          const text = `• ${key}: ${typeof value === 'object' ? JSON.stringify(value).substring(0, 30) + '...' : String(value).substring(0, 30)}`;
+        if (idx < 3) {
+          const text = `• ${key}: ${typeof value === 'object' ? JSON.stringify(value).substring(0, 25) + '...' : String(value).substring(0, 25)}`;
           doc.text(text, 22, yPosition);
-          yPosition += 4;
+          yPosition += 5; // Increased line spacing
+          leftColumnLines++;
         }
       });
     }
 
     // Right column - Response Data
     const rightColumnX = pageWidth / 2 + 10;
-    let rightColumnY = yPosition - (Object.keys(result.data || {}).length * 4) - 6;
+    let rightColumnY = yPosition - (leftColumnLines * 5) - 8;
     
     doc.setFont('helvetica', 'bold');
     doc.text('Verification Result:', rightColumnX, rightColumnY);
     doc.setFont('helvetica', 'normal');
-    rightColumnY += 6;
+    rightColumnY += 8;
 
     if (result.status === 'SUCCESS' && result.response) {
       if (result.response.verified !== undefined) {
@@ -261,12 +293,12 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
         doc.setTextColor(result.response.verified ? 34 : 239, result.response.verified ? 197 : 68, result.response.verified ? 94 : 68);
         doc.text(verifiedText, rightColumnX + 2, rightColumnY);
         doc.setTextColor(0, 0, 0);
-        rightColumnY += 5;
+        rightColumnY += 6;
       }
       
       if (result.response.confidence !== undefined) {
         doc.text(`Confidence: ${result.response.confidence}%`, rightColumnX + 2, rightColumnY);
-        rightColumnY += 5;
+        rightColumnY += 6;
       }
     } else if (result.error) {
       doc.setTextColor(239, 68, 68);
@@ -278,16 +310,21 @@ export const generatePDF = (results: Result[], filename: string = 'verification_
     // Timestamp
     doc.setFontSize(8);
     doc.setTextColor(107, 114, 128);
-    doc.text(`Processed: ${result.timestamp.toLocaleString()}`, 20, yPosition + 15);
+    doc.text(`Processed: ${result.timestamp.toLocaleString()}`, 20, yPosition + 20);
     doc.setTextColor(0, 0, 0);
 
-    yPosition += 85;
+    yPosition += 90; // Increased spacing between results
   });
 
   // Footer on all pages
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
+    
+    // Add logos to each page if not first page
+    if (i > 1) {
+      addLogosToPage();
+    }
     
     // Footer background
     doc.setFillColor(248, 250, 252);
