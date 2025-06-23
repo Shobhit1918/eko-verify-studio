@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,6 @@ interface UnifiedVerificationProps {
 
 const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onResult }) => {
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const categories = [
@@ -77,23 +77,6 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
     return services;
   }, [selectedCategory, searchQuery]);
 
-  const handleServiceSelect = (serviceId: string) => {
-    if (!selectedServices.includes(serviceId)) {
-      setSelectedServices([...selectedServices, serviceId]);
-      const service = allServices.find(s => s.id === serviceId);
-      toast.success(`${service?.name} added to verification workflow`);
-    }
-  };
-
-  const removeService = (serviceId: string) => {
-    setSelectedServices(selectedServices.filter(id => id !== serviceId));
-  };
-
-  const clearAllServices = () => {
-    setSelectedServices([]);
-    toast.success("All services cleared");
-  };
-
   const getCategoryComponent = (categoryId: string) => {
     switch (categoryId) {
       case 'employment':
@@ -108,6 +91,22 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
         return <HealthcareVerification apiKey={apiKey} onResult={onResult} />;
       case 'education':
         return <EducationVerification apiKey={apiKey} onResult={onResult} />;
+      case 'all':
+        return (
+          <div className="space-y-6">
+            <EmploymentVerification apiKey={apiKey} onResult={onResult} />
+            <Separator />
+            <GSTINVerification apiKey={apiKey} onResult={onResult} />
+            <Separator />
+            <VehicleVerification apiKey={apiKey} onResult={onResult} />
+            <Separator />
+            <FinancialVerification apiKey={apiKey} onResult={onResult} />
+            <Separator />
+            <HealthcareVerification apiKey={apiKey} onResult={onResult} />
+            <Separator />
+            <EducationVerification apiKey={apiKey} onResult={onResult} />
+          </div>
+        );
       default:
         return null;
     }
@@ -131,145 +130,33 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
         </ToggleGroup>
       </Card>
 
-      {/* Search Input */}
-      <Card className="p-6">
-        <div className="flex items-center space-x-2">
-          <Search className="h-4 w-4 text-slate-500" />
-          <Input
-            placeholder="Search APIs by name, description, or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
-          />
-          {searchQuery && (
-            <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")}>
-              Clear
-            </Button>
-          )}
-        </div>
-      </Card>
-
-      {/* Show all services grid for "all" category, otherwise show category-specific services */}
-      {selectedCategory === "all" ? (
-        <>
-          {/* All Services Grid */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">
-                {searchQuery ? `Search Results (${filteredServices.length})` : 'All Available APIs'}
-              </h3>
-              <Badge variant="outline">{filteredServices.length} services</Badge>
-            </div>
-            {filteredServices.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No services found matching "{searchQuery}"</p>
-                <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")} className="mt-2">
-                  Clear search
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredServices.map((service) => (
-                  <DragDropService
-                    key={service.id}
-                    service={service}
-                    onDrop={handleServiceSelect}
-                    isSelected={selectedServices.includes(service.id)}
-                  />
-                ))}
-              </div>
+      {/* Search Input - only show for "all" category */}
+      {selectedCategory === "all" && (
+        <Card className="p-6">
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-slate-500" />
+            <Input
+              placeholder="Search APIs by name, description, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1"
+            />
+            {searchQuery && (
+              <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")}>
+                Clear
+              </Button>
             )}
-          </Card>
-
-          {/* Selected Services */}
-          {selectedServices.length > 0 && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Selected Services for Multi-Verification</h3>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="secondary">{selectedServices.length} selected</Badge>
-                  <Button size="sm" variant="outline" onClick={clearAllServices}>
-                    Clear All
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 mb-4">
-                {selectedServices.map((serviceId) => {
-                  const service = allServices.find(s => s.id === serviceId);
-                  if (!service) return null;
-                  const IconComponent = service.icon;
-                  
-                  return (
-                    <div key={serviceId} className="flex items-center space-x-2 bg-slate-100 px-3 py-2 rounded-lg">
-                      <div className={`p-1 rounded ${service.color}`}>
-                        <IconComponent className="h-3 w-3 text-white" />
-                      </div>
-                      <span className="text-sm font-medium">{service.name}</span>
-                      <Badge variant="outline" className="text-xs">{service.category}</Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeService(serviceId)}
-                        className="h-5 w-5 p-0 hover:bg-slate-200"
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div className="text-sm text-slate-600 bg-blue-50 p-3 rounded-lg">
-                <p className="font-medium mb-1">🔄 Multi-Service Verification Ready</p>
-                <p>You can now input data and verify multiple services at once. Each service will use the relevant fields from your input.</p>
-              </div>
-            </Card>
-          )}
-        </>
-      ) : (
-        <>
-          {/* Category-specific services */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">
-                {categories.find(c => c.id === selectedCategory)?.label} Services
-                {searchQuery && ` - Search Results`}
-              </h3>
-              <Badge variant="outline">{filteredServices.length} services</Badge>
-            </div>
-            {filteredServices.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No services found matching "{searchQuery}"</p>
-                <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")} className="mt-2">
-                  Clear search
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredServices.map((service) => (
-                  <DragDropService
-                    key={service.id}
-                    service={service}
-                    onDrop={handleServiceSelect}
-                    isSelected={selectedServices.includes(service.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {/* Category-specific verification component */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">
-              {categories.find(c => c.id === selectedCategory)?.label} Verification
-            </h3>
-            {getCategoryComponent(selectedCategory)}
-          </Card>
-        </>
+          </div>
+        </Card>
       )}
+
+      {/* Verification Component */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">
+          {categories.find(c => c.id === selectedCategory)?.label} Verification
+        </h3>
+        {getCategoryComponent(selectedCategory)}
+      </Card>
     </div>
   );
 };
