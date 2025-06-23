@@ -1,11 +1,11 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Building2, Car, Factory, FileCheck, Shield, Upload, GraduationCap, Award, CreditCard, Heart, Truck, Users } from "lucide-react";
+import { Building2, Car, Factory, FileCheck, Shield, Upload, GraduationCap, Award, CreditCard, Heart, Truck, Users, Search } from "lucide-react";
 import { toast } from "sonner";
 import DragDropService from "@/components/common/DragDropService";
 import EmploymentVerification from "./EmploymentVerification";
@@ -23,6 +23,7 @@ interface UnifiedVerificationProps {
 const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onResult }) => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const categories = [
     { id: "all", label: "All Services", icon: Shield },
@@ -60,9 +61,21 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
     { id: 'professional-certification', name: 'Professional Certification', icon: Award, color: 'bg-purple-500', category: 'education', description: 'Verify professional certifications', fields: ['certificate_number', 'certifying_body', 'certificate_holder'] }
   ];
 
-  const filteredServices = selectedCategory === "all" 
-    ? allServices 
-    : allServices.filter(service => service.category === selectedCategory);
+  const filteredServices = useMemo(() => {
+    let services = selectedCategory === "all" 
+      ? allServices 
+      : allServices.filter(service => service.category === selectedCategory);
+
+    if (searchQuery.trim()) {
+      services = services.filter(service => 
+        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return services;
+  }, [selectedCategory, searchQuery]);
 
   const handleServiceSelect = (serviceId: string) => {
     if (!selectedServices.includes(serviceId)) {
@@ -118,32 +131,62 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
         </ToggleGroup>
       </Card>
 
+      {/* Search Input */}
+      <Card className="p-6">
+        <div className="flex items-center space-x-2">
+          <Search className="h-4 w-4 text-slate-500" />
+          <Input
+            placeholder="Search APIs by name, description, or category..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          {searchQuery && (
+            <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")}>
+              Clear
+            </Button>
+          )}
+        </div>
+      </Card>
+
       {/* Show all services grid for "all" category, otherwise show category-specific services */}
       {selectedCategory === "all" ? (
         <>
           {/* All Services Grid */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">All Available APIs</h3>
-              <Badge variant="outline">{allServices.length} services</Badge>
+              <h3 className="text-lg font-semibold text-slate-900">
+                {searchQuery ? `Search Results (${filteredServices.length})` : 'All Available APIs'}
+              </h3>
+              <Badge variant="outline">{filteredServices.length} services</Badge>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allServices.map((service) => (
-                <DragDropService
-                  key={service.id}
-                  service={service}
-                  onDrop={handleServiceSelect}
-                  isSelected={selectedServices.includes(service.id)}
-                />
-              ))}
-            </div>
+            {filteredServices.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No services found matching "{searchQuery}"</p>
+                <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")} className="mt-2">
+                  Clear search
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredServices.map((service) => (
+                  <DragDropService
+                    key={service.id}
+                    service={service}
+                    onDrop={handleServiceSelect}
+                    isSelected={selectedServices.includes(service.id)}
+                  />
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* Selected Services */}
           {selectedServices.length > 0 && (
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Selected Services</h3>
+                <h3 className="text-lg font-semibold text-slate-900">Selected Services for Multi-Verification</h3>
                 <div className="flex items-center space-x-2">
                   <Badge variant="secondary">{selectedServices.length} selected</Badge>
                   <Button size="sm" variant="outline" onClick={clearAllServices}>
@@ -152,7 +195,7 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
                 </div>
               </div>
               
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-4">
                 {selectedServices.map((serviceId) => {
                   const service = allServices.find(s => s.id === serviceId);
                   if (!service) return null;
@@ -177,6 +220,11 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
                   );
                 })}
               </div>
+              
+              <div className="text-sm text-slate-600 bg-blue-50 p-3 rounded-lg">
+                <p className="font-medium mb-1">🔄 Multi-Service Verification Ready</p>
+                <p>You can now input data and verify multiple services at once. Each service will use the relevant fields from your input.</p>
+              </div>
             </Card>
           )}
         </>
@@ -187,19 +235,30 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-900">
                 {categories.find(c => c.id === selectedCategory)?.label} Services
+                {searchQuery && ` - Search Results`}
               </h3>
               <Badge variant="outline">{filteredServices.length} services</Badge>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredServices.map((service) => (
-                <DragDropService
-                  key={service.id}
-                  service={service}
-                  onDrop={handleServiceSelect}
-                  isSelected={selectedServices.includes(service.id)}
-                />
-              ))}
-            </div>
+            {filteredServices.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No services found matching "{searchQuery}"</p>
+                <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")} className="mt-2">
+                  Clear search
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredServices.map((service) => (
+                  <DragDropService
+                    key={service.id}
+                    service={service}
+                    onDrop={handleServiceSelect}
+                    isSelected={selectedServices.includes(service.id)}
+                  />
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* Category-specific verification component */}
