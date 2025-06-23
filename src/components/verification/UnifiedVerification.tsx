@@ -118,91 +118,98 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
         </ToggleGroup>
       </Card>
 
-      {/* Available Services */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">
-            Available Services {selectedCategory !== "all" && `- ${categories.find(c => c.id === selectedCategory)?.label}`}
-          </h3>
-          <Badge variant="outline">{filteredServices.length} services</Badge>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredServices.map((service) => (
-            <DragDropService
-              key={service.id}
-              service={service}
-              onDrop={handleServiceSelect}
-              isSelected={selectedServices.includes(service.id)}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Selected Services Display */}
-      {selectedServices.length > 0 && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-900">Selected Services</h3>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary">{selectedServices.length} selected</Badge>
-              <Button size="sm" variant="outline" onClick={clearAllServices}>
-                Clear All
-              </Button>
+      {/* Show all services grid for "all" category, otherwise show category-specific services */}
+      {selectedCategory === "all" ? (
+        <>
+          {/* All Services Grid */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">All Available APIs</h3>
+              <Badge variant="outline">{allServices.length} services</Badge>
             </div>
-          </div>
-          
-          <div className="flex flex-wrap gap-2 mb-6">
-            {selectedServices.map((serviceId) => {
-              const service = allServices.find(s => s.id === serviceId);
-              if (!service) return null;
-              const IconComponent = service.icon;
-              
-              return (
-                <div key={serviceId} className="flex items-center space-x-2 bg-slate-100 px-3 py-2 rounded-lg">
-                  <div className={`p-1 rounded ${service.color}`}>
-                    <IconComponent className="h-3 w-3 text-white" />
-                  </div>
-                  <span className="text-sm font-medium">{service.name}</span>
-                  <Badge variant="outline" className="text-xs">{service.category}</Badge>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => removeService(serviceId)}
-                    className="h-5 w-5 p-0 hover:bg-slate-200"
-                  >
-                    ×
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allServices.map((service) => (
+                <DragDropService
+                  key={service.id}
+                  service={service}
+                  onDrop={handleServiceSelect}
+                  isSelected={selectedServices.includes(service.id)}
+                />
+              ))}
+            </div>
+          </Card>
+
+          {/* Selected Services */}
+          {selectedServices.length > 0 && (
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">Selected Services</h3>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary">{selectedServices.length} selected</Badge>
+                  <Button size="sm" variant="outline" onClick={clearAllServices}>
+                    Clear All
                   </Button>
                 </div>
-              );
-            })}
-          </div>
-
-          <Separator className="my-4" />
-          
-          {/* Render appropriate verification components based on selected services */}
-          <div className="space-y-6">
-            {selectedCategory !== "all" && getCategoryComponent(selectedCategory)}
-            {selectedCategory === "all" && (
-              <div className="space-y-6">
-                {['employment', 'gstin', 'vehicle', 'financial', 'healthcare', 'education'].map(categoryId => {
-                  const hasServicesInCategory = selectedServices.some(serviceId => 
-                    allServices.find(s => s.id === serviceId)?.category === categoryId
-                  );
-                  if (!hasServicesInCategory) return null;
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {selectedServices.map((serviceId) => {
+                  const service = allServices.find(s => s.id === serviceId);
+                  if (!service) return null;
+                  const IconComponent = service.icon;
                   
                   return (
-                    <div key={categoryId}>
-                      <h4 className="text-md font-semibold text-slate-800 mb-3 capitalize">
-                        {categoryId} Verification
-                      </h4>
-                      {getCategoryComponent(categoryId)}
+                    <div key={serviceId} className="flex items-center space-x-2 bg-slate-100 px-3 py-2 rounded-lg">
+                      <div className={`p-1 rounded ${service.color}`}>
+                        <IconComponent className="h-3 w-3 text-white" />
+                      </div>
+                      <span className="text-sm font-medium">{service.name}</span>
+                      <Badge variant="outline" className="text-xs">{service.category}</Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeService(serviceId)}
+                        className="h-5 w-5 p-0 hover:bg-slate-200"
+                      >
+                        ×
+                      </Button>
                     </div>
                   );
                 })}
               </div>
-            )}
-          </div>
-        </Card>
+            </Card>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Category-specific services */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">
+                {categories.find(c => c.id === selectedCategory)?.label} Services
+              </h3>
+              <Badge variant="outline">{filteredServices.length} services</Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredServices.map((service) => (
+                <DragDropService
+                  key={service.id}
+                  service={service}
+                  onDrop={handleServiceSelect}
+                  isSelected={selectedServices.includes(service.id)}
+                />
+              ))}
+            </div>
+          </Card>
+
+          {/* Category-specific verification component */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+              {categories.find(c => c.id === selectedCategory)?.label} Verification
+            </h3>
+            {getCategoryComponent(selectedCategory)}
+          </Card>
+        </>
       )}
     </div>
   );
