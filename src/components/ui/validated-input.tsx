@@ -2,6 +2,7 @@
 import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 interface ValidatedInputProps extends React.ComponentProps<typeof Input> {
   validationType?: 'aadhaar' | 'mobile' | 'ifsc' | 'default'
@@ -54,21 +55,54 @@ const ValidatedInput = React.forwardRef<HTMLInputElement, ValidatedInputProps>(
       
       // Restrict input based on validation type
       if (validationType === 'aadhaar' || validationType === 'mobile') {
-        // Only allow numbers
+        // Only allow numbers and enforce max length strictly
         const numericValue = value.replace(/[^0-9]/g, '')
-        if (maxLength && numericValue.length <= maxLength) {
-          e.target.value = numericValue
-          onChange?.(e)
+        if (maxLength && numericValue.length > maxLength) {
+          toast.error(`Maximum ${maxLength} digits allowed for ${validationType}`)
+          return // Don't update the input
         }
+        e.target.value = numericValue
+        onChange?.(e)
       } else if (validationType === 'ifsc') {
-        // Allow uppercase letters and numbers only
+        // Allow uppercase letters and numbers only, enforce max length strictly
         const ifscValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-        if (maxLength && ifscValue.length <= maxLength) {
-          e.target.value = ifscValue
-          onChange?.(e)
+        if (maxLength && ifscValue.length > maxLength) {
+          toast.error(`Maximum ${maxLength} characters allowed for IFSC code`)
+          return // Don't update the input
         }
+        e.target.value = ifscValue
+        onChange?.(e)
       } else {
         onChange?.(e)
+      }
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const currentValue = (e.target as HTMLInputElement).value
+      const maxLength = getMaxLength()
+      
+      // Allow backspace, delete, arrow keys, tab, etc.
+      if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key)) {
+        return
+      }
+      
+      // Prevent further input if max length reached
+      if (maxLength && currentValue.length >= maxLength) {
+        e.preventDefault()
+        toast.error(`Maximum ${maxLength} characters limit reached`)
+      }
+      
+      // Additional validation for specific types
+      if (validationType === 'aadhaar' || validationType === 'mobile') {
+        if (!/[0-9]/.test(e.key)) {
+          e.preventDefault()
+          toast.error(`Only numbers allowed for ${validationType}`)
+        }
+      } else if (validationType === 'ifsc') {
+        if (!/[A-Za-z0-9]/.test(e.key)) {
+          e.preventDefault()
+          toast.error('Only letters and numbers allowed for IFSC code')
+        }
       }
     }
 
@@ -79,6 +113,7 @@ const ValidatedInput = React.forwardRef<HTMLInputElement, ValidatedInputProps>(
         pattern={getPattern()}
         placeholder={getPlaceholder()}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         ref={ref}
         {...props}
       />

@@ -12,18 +12,26 @@ import VehicleVerification from "@/components/verification/VehicleVerification";
 import FinancialVerification from "@/components/verification/FinancialVerification";
 import HealthcareVerification from "@/components/verification/HealthcareVerification";
 import EducationVerification from "@/components/verification/EducationVerification";
+import UnifiedVerification from "@/components/verification/UnifiedVerification";
 import APIKeyInput from "@/components/common/APIKeyInput";
 import BulkUpload from "@/components/common/BulkUpload";
 import ResultsManager from "@/components/common/ResultsManager";
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("employment");
+  const [activeTab, setActiveTab] = useState("unified");
   const [apiKey, setApiKey] = useState("");
   const [results, setResults] = useState([]);
   const [credits, setCredits] = useState(2500); // Initial credits
   const [transactions, setTransactions] = useState([]);
 
   const verificationCategories = [
+    {
+      id: "unified",
+      label: "Multi-Service Verification",
+      icon: Shield,
+      color: "bg-gradient-to-r from-blue-500 to-purple-500",
+      services: "All"
+    },
     {
       id: "employment",
       label: "Employment Verification",
@@ -238,7 +246,8 @@ const Index = () => {
           <div className="lg:col-span-3">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex items-center justify-between mb-6">
-                <TabsList className="grid w-full max-w-md grid-cols-3 lg:grid-cols-6">
+                <TabsList className="grid w-full max-w-md grid-cols-3 lg:grid-cols-7">
+                  <TabsTrigger value="unified" className="text-xs">Multi-Service</TabsTrigger>
                   <TabsTrigger value="employment" className="text-xs">Employment</TabsTrigger>
                   <TabsTrigger value="gstin" className="text-xs">GSTIN</TabsTrigger>
                   <TabsTrigger value="vehicle" className="text-xs">Vehicle</TabsTrigger>
@@ -248,6 +257,10 @@ const Index = () => {
                 </TabsList>
                 <BulkUpload onResults={addResult} apiKey={apiKey} />
               </div>
+
+              <TabsContent value="unified" className="mt-0">
+                <UnifiedVerification apiKey={apiKey} onResult={addResult} />
+              </TabsContent>
 
               <TabsContent value="employment" className="mt-0">
                 <EmploymentVerification apiKey={apiKey} onResult={addResult} />
