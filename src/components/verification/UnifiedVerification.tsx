@@ -24,6 +24,7 @@ interface UnifiedVerificationProps {
 const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onResult }) => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   const categories = [
     { id: "all", label: "All Services", icon: Shield },
@@ -77,6 +78,13 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
     return services;
   }, [selectedCategory, searchQuery]);
 
+  const handleServiceSelect = (serviceId: string) => {
+    if (!selectedServices.includes(serviceId)) {
+      setSelectedServices([...selectedServices, serviceId]);
+      toast.success("Service added to verification queue");
+    }
+  };
+
   const getCategoryComponent = (categoryId: string) => {
     switch (categoryId) {
       case 'employment':
@@ -91,27 +99,85 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
         return <HealthcareVerification apiKey={apiKey} onResult={onResult} />;
       case 'education':
         return <EducationVerification apiKey={apiKey} onResult={onResult} />;
-      case 'all':
-        return (
-          <div className="space-y-6">
-            <EmploymentVerification apiKey={apiKey} onResult={onResult} />
-            <Separator />
-            <GSTINVerification apiKey={apiKey} onResult={onResult} />
-            <Separator />
-            <VehicleVerification apiKey={apiKey} onResult={onResult} />
-            <Separator />
-            <FinancialVerification apiKey={apiKey} onResult={onResult} />
-            <Separator />
-            <HealthcareVerification apiKey={apiKey} onResult={onResult} />
-            <Separator />
-            <EducationVerification apiKey={apiKey} onResult={onResult} />
-          </div>
-        );
       default:
         return null;
     }
   };
 
+  // If "all" category is selected, show the unified service selector
+  if (selectedCategory === "all") {
+    return (
+      <div className="space-y-6">
+        {/* Category Filter */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Select Verification Categories</h3>
+          <ToggleGroup type="single" value={selectedCategory} onValueChange={setSelectedCategory}>
+            {categories.map((category) => {
+              const IconComponent = category.icon;
+              return (
+                <ToggleGroupItem key={category.id} value={category.id} className="flex items-center space-x-2">
+                  <IconComponent className="h-4 w-4" />
+                  <span>{category.label}</span>
+                </ToggleGroupItem>
+              );
+            })}
+          </ToggleGroup>
+        </Card>
+
+        {/* Search Input */}
+        <Card className="p-6">
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-slate-500" />
+            <Input
+              placeholder="Search APIs by name, description, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1"
+            />
+            {searchQuery && (
+              <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")}>
+                Clear
+              </Button>
+            )}
+          </div>
+        </Card>
+
+        {/* All Services Grid */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-900">
+              All Available APIs ({filteredServices.length})
+            </h3>
+            {selectedServices.length > 0 && (
+              <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50">
+                {selectedServices.length} services selected
+              </Badge>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredServices.map((service) => (
+              <DragDropService
+                key={service.id}
+                service={service}
+                onDrop={handleServiceSelect}
+                isSelected={selectedServices.includes(service.id)}
+              />
+            ))}
+          </div>
+
+          {filteredServices.length === 0 && (
+            <div className="text-center py-8 text-slate-500">
+              <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No services found matching your search.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  // For other categories, show the specific verification component
   return (
     <div className="space-y-6">
       {/* Category Filter */}
@@ -129,26 +195,6 @@ const UnifiedVerification: React.FC<UnifiedVerificationProps> = ({ apiKey, onRes
           })}
         </ToggleGroup>
       </Card>
-
-      {/* Search Input - only show for "all" category */}
-      {selectedCategory === "all" && (
-        <Card className="p-6">
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-slate-500" />
-            <Input
-              placeholder="Search APIs by name, description, or category..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
-            />
-            {searchQuery && (
-              <Button size="sm" variant="ghost" onClick={() => setSearchQuery("")}>
-                Clear
-              </Button>
-            )}
-          </div>
-        </Card>
-      )}
 
       {/* Verification Component */}
       <Card className="p-6">
